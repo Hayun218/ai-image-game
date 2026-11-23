@@ -1,16 +1,35 @@
 @import "tailwindcss";
 
 :root {
-  /* 행사 포스터 색: 남색 + 마젠타. 어두운 배경에 높은 대비 */
+  /* 정사각형 사진 한 변: 1080p 에서 약 900px, 4K 에서 약 1800px */
+  --sq: min(47vw, 84vh);
+}
+
+/* 다크(기본): 행사 포스터 색 남색 + 마젠타. 어두운 배경에 높은 대비 */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
   --background: #07081a;
   --foreground: #ffffff;
   --navy: #23286b;
   --accent: #e4007f;
   --ok: #22c55e;
   --bad: #ef4444;
-  /* 정사각형 사진 한 변: 1080p 에서 약 900px, 4K 에서 약 1800px */
-  --sq: min(47vw, 84vh);
 }
+
+/* 라이트: 밝은 조명 아래 모니터용. 상단 바는 두 모드 모두 남색 */
+[data-theme="light"] {
+  color-scheme: light;
+  --background: #f3f4fa;
+  --foreground: #0b0d2a;
+  --navy: #23286b;
+  --accent: #d10074;
+  --ok: #16a34a;
+  --bad: #dc2626;
+}
+
+/* light: 접두사 = 라이트 모드에서만 적용 */
+@custom-variant light (&:where([data-theme="light"], [data-theme="light"] *));
 
 @theme inline {
   --color-background: var(--background);

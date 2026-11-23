@@ -60,14 +60,14 @@ function Slot({
   let ring = "ring-transparent";
   if (answer && chosen) ring = answer.correct ? "ring-ok" : "ring-bad";
   else if (answer && isAi) ring = "ring-ok/70"; // 틀렸을 때 실제 AI 쪽을 보여 준다
-  else if (chosen) ring = "ring-white";
+  else if (chosen) ring = "ring-foreground";
 
   return (
     <div
       role="button"
       aria-disabled={!!choice}
       onClick={() => !choice && onChoose(side)}
-      className={`relative size-(--sq) overflow-hidden rounded-[1.2vh] bg-white/5 ring-[1vh] ${ring} ${
+      className={`relative size-(--sq) overflow-hidden rounded-[1.2vh] bg-foreground/5 ring-[1vh] ${ring} ${
         choice ? "cursor-default" : "cursor-pointer"
       }`}
       aria-label={side === "L" ? "왼쪽 사진" : "오른쪽 사진"}

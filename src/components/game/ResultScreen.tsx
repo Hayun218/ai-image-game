@@ -59,7 +59,7 @@ export function ResultScreen({ finish, onRestart, onIdle }: Props) {
         type="button"
         onClick={() => !locked && onRestart()}
         className={`mt-[2vh] rounded-full px-[6vh] py-[2.2vh] text-[4vh] font-black transition active:scale-95 ${
-          locked ? "bg-white/15 text-white/50" : "bg-white text-black hover:brightness-90"
+          locked ? "bg-foreground/15 text-foreground/50" : "bg-foreground text-background hover:brightness-90"
         }`}
       >
         다시하기 <span className="text-[2.6vh] font-bold opacity-70">Enter</span>
@@ -72,14 +72,14 @@ function Pass({ finish }: { finish: FinishResponse }) {
   return (
     <>
       <Confetti />
-      <p className="text-[4vh] font-bold text-white/85">
+      <p className="text-[4vh] font-bold text-foreground/85">
         {finish.total}문제 중 {finish.score}개 정답!
       </p>
-      <h2 className="animate-pass bg-gradient-to-b from-white to-accent bg-clip-text text-[26vh] font-black leading-none tracking-tighter text-transparent drop-shadow-[0_0_5vh_rgba(228,0,127,0.55)]">
+      <h2 className="animate-pass bg-gradient-to-b from-foreground to-accent bg-clip-text text-[26vh] font-black leading-none tracking-tighter text-transparent drop-shadow-[0_0_5vh_rgba(228,0,127,0.55)]">
         PASS
       </h2>
       <p className="text-[3.4vh] font-bold">스태프에게 이 화면을 보여 주세요 🎁</p>
-      <p className="rounded-[1vh] border-[0.3vh] border-white/40 px-[3vh] py-[1vh] font-mono text-[4.4vh] font-bold tracking-[0.3em]">
+      <p className="rounded-[1vh] border-[0.3vh] border-foreground/40 px-[3vh] py-[1vh] font-mono text-[4.4vh] font-bold tracking-[0.3em]">
         #{finish.code}
       </p>
     </>
@@ -89,10 +89,10 @@ function Pass({ finish }: { finish: FinishResponse }) {
 function Fail({ finish }: { finish: FinishResponse }) {
   return (
     <>
-      <p className="text-[4vh] font-bold text-white/70">아쉬워요!</p>
+      <p className="text-[4vh] font-bold text-foreground/70">아쉬워요!</p>
       <h2 className="text-[20vh] font-black leading-none tabular-nums">
         {finish.score}
-        <span className="text-[10vh] text-white/50"> / {finish.total}</span>
+        <span className="text-[10vh] text-foreground/50"> / {finish.total}</span>
       </h2>
       <p className="text-[3.6vh] font-bold">
         {GAME.passScore}개 이상 맞히면 <span className="text-accent">PASS</span> — 다시 도전해 보세요
@@ -101,7 +101,7 @@ function Fail({ finish }: { finish: FinishResponse }) {
   );
 }
 
-const CONFETTI_COLORS = ["#e4007f", "#ffffff", "#22c55e", "#facc15", "#60a5fa"];
+const CONFETTI_COLORS = ["#e4007f", "var(--foreground)", "#22c55e", "#facc15", "#60a5fa"];
 
 /** 가벼운 CSS 꽃가루 (값은 컴포넌트마다 한 번만 정한다) */
 function Confetti() {

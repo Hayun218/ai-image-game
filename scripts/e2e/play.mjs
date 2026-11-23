@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // 실제 서버에 붙어서 게임을 끝까지 플레이하는 E2E 점검.
-// 사용: (서버 실행 중) node scripts/e2e/play.mjs [--url http://localhost:3000] [--games 3] [--shots out/dir]
+// 사용: (서버 실행 중) node scripts/e2e/play.mjs [--url http://localhost:3000] [--games 3] [--shots out/dir] [--theme light]
 //
 // 확인 항목
 // - 라운드 화면이 보일 때 두 이미지가 모두 디코드 완료 상태인지 (동시 표시)
@@ -21,6 +21,8 @@ const WIDTH = Number(arg("width", "1920"));
 const HEIGHT = Number(arg("height", "1080"));
 // --perfect data/pool.json : 풀 파일로 AI 쪽을 알고 전부 맞힌다 (PASS 화면 점검용)
 const PERFECT = arg("perfect", "");
+// --theme light|dark : 저장된 테마를 미리 넣고 시작 (기본: 앱 기본값)
+const THEME = arg("theme", "");
 const aiHashes = PERFECT
   ? new Set(JSON.parse(readFileSync(PERFECT, "utf8")).pairs.map((p) => p.ai.hash))
   : null;
@@ -35,6 +37,8 @@ const page = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT } 
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
 page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+
+if (THEME) await page.addInitScript((t) => localStorage.setItem("theme", t), THEME);
 
 // 라운드 래퍼가 opacity-100 이 되는 순간 두 이미지 상태를 기록
 await page.addInitScript(() => {
@@ -72,6 +76,7 @@ for (let g = 0; g < GAMES; g++) {
     await page.locator(".opacity-100 img").nth(1).waitFor();
     if (g === 0 && r === 0) {
       console.log(`  첫 라운드까지 ${Date.now() - t0}ms`);
+      await page.waitForTimeout(400); // 페이드인(300ms)이 끝난 뒤 캡처
       await shot(page, "02-round");
     }
     let key = Math.random() < 0.5 ? "ArrowLeft" : "ArrowRight";

@@ -8,6 +8,7 @@ import { loadGame, post, type LoadedGame } from "./preload";
 import { ResultScreen } from "./ResultScreen";
 import { RoundView } from "./RoundView";
 import { StartScreen } from "./StartScreen";
+import { toggleTheme } from "../theme";
 
 type Phase =
   | { name: "start" }
@@ -107,11 +108,15 @@ export function Game() {
   // 키보드 / 프레젠터 리모컨
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "f" || e.key === "F") {
+      if (e.code === "KeyF" || e.key === "f" || e.key === "F") {
         toggleFullscreen();
         return;
       }
       if (e.repeat) return;
+      if (e.code === "KeyT" || e.key === "t" || e.key === "T") {
+        toggleTheme();
+        return;
+      }
       if (phase.name === "round") {
         if (LEFT_KEYS.has(e.key)) choose("L");
         else if (RIGHT_KEYS.has(e.key)) choose("R");
@@ -167,8 +172,8 @@ export function Game() {
 function Loading() {
   return (
     <div className="flex flex-col items-center gap-[3vh]">
-      <div className="h-[8vh] w-[8vh] animate-spin rounded-full border-[0.8vh] border-white/15 border-t-accent" />
-      <p className="text-[4vh] font-bold text-white/80">준비 중…</p>
+      <div className="h-[8vh] w-[8vh] animate-spin rounded-full border-[0.8vh] border-foreground/15 border-t-accent" />
+      <p className="text-[4vh] font-bold text-foreground/80">준비 중…</p>
     </div>
   );
 }
@@ -177,8 +182,8 @@ function ErrorView({ message }: { message: string }) {
   return (
     <div className="flex max-w-[70vw] flex-col items-center gap-[2vh] text-center">
       <p className="text-[4.5vh] font-bold">잠시 문제가 생겼어요</p>
-      <p className="text-[2.4vh] text-white/60">{message}</p>
-      <p className="text-[2.4vh] text-white/60">Enter 를 누르면 다시 시도합니다 · 10초 뒤 처음 화면으로</p>
+      <p className="text-[2.4vh] text-foreground/60">{message}</p>
+      <p className="text-[2.4vh] text-foreground/60">Enter 를 누르면 다시 시도합니다 · 10초 뒤 처음 화면으로</p>
     </div>
   );
 }
