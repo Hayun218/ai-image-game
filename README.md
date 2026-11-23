@@ -59,7 +59,7 @@ npm start
 
 ### 개발용 샘플 풀
 
-실제 풀(5단계)이 준비되기 전에는 Wikimedia Commons 의 샘플 8쌍으로 플레이할 수 있습니다.
+실제 풀(5단계)이 준비되기 전에는 Wikimedia Commons 의 샘플 9쌍으로 플레이할 수 있습니다.
 AI 이미지와 실제 사진 모두 Commons 에 올라온 진짜 파일(퍼블릭 도메인/CC)이며, `data/` 에만 저장됩니다.
 
 ```bash

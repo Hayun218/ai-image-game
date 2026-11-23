@@ -1,12 +1,13 @@
 {
-  "_comment": "개발·테스트용 샘플 쌍 (Wikimedia Commons, 퍼블릭 도메인/CC). 행사용 풀에는 쓰지 않는다. ai = AI 생성 이미지, human = 사람이 촬영한 사진.",
+  "_comment": "개발·테스트용 샘플 쌍 (Wikimedia Commons, 퍼블릭 도메인/CC). 행사용 풀에는 쓰지 않는다. ai = AI 생성 이미지, human = 사람이 촬영한 사진. README 의 '사진 기준 (실사만)' 을 지킬 것: AI 쪽도 사진풍만, 두 장의 톤·주제·구도를 맞추고 글자·로고·워터마크·필터는 제외.",
   "pairs": [
-    { "topic": "cat", "ai": "AI sleepy cat.jpg", "human": "Cat sleeping on a bench, Prazeres Cemetery, Lisbon, Portugal julesvernex2.jpg" },
-    { "topic": "lighthouse", "ai": "Leuchtturm bei Nacht - Midjourney+Firefly+Photoshop.jpg", "human": "2017-04 Circumpolar trails sunset at La Hague lighthouse.jpg" },
-    { "topic": "forest-path", "ai": "The Path to the Black Forest (FLUX 1.1 Pro Ultra).webp", "human": "Haltern am See, Naturpark Hohe Mark, Waldweg -- 2022 -- 0939.jpg" },
-    { "topic": "desert", "ai": "Dunes de Merzouga, l'erg chebbi (Sahara marocain).png", "human": "Merzouga Sahara.jpg" },
-    { "topic": "beach", "ai": "Karibikinsel - Midjourney+Firefly+Photoshop.jpg", "human": "Koh Mak (island), Thailand, Palm trees on the beach.jpg" },
-    { "topic": "vintage-car", "ai": "Midjourney - Oldtimer.png", "human": "Cavour monument and white vintage car, Verona - 2026-09-12.jpg" },
+    { "topic": "hedgehog", "ai": "Cute Hedgehog.jpg", "human": "Erinaceus roumanicus 2020 G2.jpg" },
+    { "topic": "donut", "ai": "Chocolate Donut With Sprinkles on it.jpg", "human": "Chocolate-glazed doughnut with sprinkles (7429937320).jpg" },
+    { "topic": "babka", "ai": "خبز البابكا.png", "human": "Chocolate Babka - 31706252800.jpg" },
+    { "topic": "wine", "ai": "Cortagotas2.png", "human": "Pouring red wine into a glass.jpg" },
+    { "topic": "milky-way", "ai": "Gemini Generated Image yp81eoyp81eoyp81.png", "human": "Copper Breaks State Park with the Milky Way Galaxy.jpg" },
+    { "topic": "stone-tower", "ai": "Corbaistouriareconstitution.png", "human": "2025 Wieża mieszkalna w Starej Łomnicy (3).jpg" },
+    { "topic": "mountain", "ai": "Adobe Firefly generated landscape photography.jpg", "human": "Vengetindene as seen from Litlefjellet over Vengedalen, Møre og Romsdal, Norway in 2013 June.jpg" },
     { "topic": "food", "ai": "Generative AI can be used to create realistic images of food dishes.jpg", "human": "Lunch dish (pumpkin sauce, potatoes and chicken steak).jpg" },
     { "topic": "valley", "ai": "Illuminated Valley in the Afternoon (Imagen 4.0).webp", "human": "Lienz SG8.JPG" }
   ]
