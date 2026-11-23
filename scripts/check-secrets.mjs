@@ -14,27 +14,15 @@ const files = execFileSync(
   .split("\n")
   .filter(Boolean);
 
-const ENV_KEYS = [
-  "UPSTASH_REDIS_REST_URL",
-  "UPSTASH_REDIS_REST_TOKEN",
-  "UNSPLASH_ACCESS_KEY",
-  "PEXELS_API_KEY",
-  "ANTHROPIC_API_KEY",
-  "IMAGE_PROVIDER_API_KEY",
-  "ADMIN_PASSWORD",
-  "NETLIFY_AUTH_TOKEN",
-  "NETLIFY_SITE_ID",
-];
+const ENV_KEYS = ["FREEPIK_API_KEY", "ANTHROPIC_API_KEY", "ADMIN_PASSWORD"];
 
 const PATTERNS = [
   [/sk-ant-[A-Za-z0-9_-]{10,}/, "Anthropic API key"],
   [/\bsk-[A-Za-z0-9]{20,}/, "OpenAI-style key"],
   [/AIza[0-9A-Za-z_-]{30,}/, "Google API key"],
   [/\br8_[A-Za-z0-9]{20,}/, "Replicate token"],
-  [/\bnfp_[A-Za-z0-9]{20,}/, "Netlify personal token"],
   [/\bgh[pousr]_[A-Za-z0-9]{30,}/, "GitHub token"],
   [/AKIA[0-9A-Z]{16}/, "AWS access key"],
-  [/https:\/\/[a-z0-9-]+\.upstash\.io/, "Upstash Redis URL"],
   [/-----BEGIN [A-Z ]*PRIVATE KEY-----/, "Private key"],
   // KEY=값 형태로 실제 값이 들어간 경우 (.env.example 의 빈 값은 통과)
   [new RegExp(`\\b(${ENV_KEYS.join("|")})\\s*[=:]\\s*["']?[A-Za-z0-9_\\-./+:]{8,}`), "env value assigned"],

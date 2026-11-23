@@ -16,13 +16,10 @@
 /out/
 /build
 
-# netlify local state
-/.netlify/
-
-# build-pool working data (사진·쌍 데이터는 절대 커밋하지 않는다)
+# 사진·쌍 데이터 (노트북 로컬에만 둔다. 절대 커밋하지 않는다)
+/data/
 /tmp/
 /scripts/build-pool/.cache/
-/scripts/build-pool/work/
 
 # misc
 .DS_Store
