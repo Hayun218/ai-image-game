@@ -29,8 +29,30 @@ npm run build
 npm start
 ```
 
-브라우저에서 http://localhost:3000 을 열고 전체화면(F11)으로 전환합니다.
+브라우저에서 http://localhost:3000 을 열고 `F` 키(또는 F11)로 전체화면으로 전환합니다.
 관리자 페이지는 http://localhost:3000/admin 입니다 (비밀번호: `ADMIN_PASSWORD`).
+
+### 조작
+
+| 화면 | 입력 |
+| --- | --- |
+| 시작 | Enter / Space / → / PageDown / [시작하기] 클릭 |
+| 라운드 | ← 또는 PageUp = 왼쪽, → 또는 PageDown = 오른쪽, 사진 클릭 (프레젠터 리모컨 가능) |
+| 결과 | Enter / Space / PageDown / [다시하기] (결과가 뜬 뒤 1.5초간은 입력 무시) |
+| 공통 | `F` = 전체화면 전환 |
+
+결과 화면에서 60초간 입력이 없으면 시작 화면으로 돌아갑니다. 라운드 중에는 타임아웃이 없습니다.
+
+### 개발용 샘플 풀
+
+실제 풀(5단계)이 준비되기 전에는 Wikimedia Commons 의 샘플 8쌍으로 플레이할 수 있습니다.
+AI 이미지와 실제 사진 모두 Commons 에 올라온 진짜 파일(퍼블릭 도메인/CC)이며, `data/` 에만 저장됩니다.
+
+```bash
+npm run samples
+```
+
+Commons 가 요청을 제한하면(429) 서버가 요구하는 시간만큼 기다렸다가 이어서 받습니다.
 
 개발 중에는 `npm run dev` 를 씁니다.
 
@@ -38,7 +60,8 @@ npm start
 | --- | --- |
 | `npm run dev` | 개발 서버 |
 | `npm run build` / `npm start` | 프로덕션 빌드 / 실행 (행사 때는 이것) |
-| `npm run lint` / `npm run typecheck` | 린트 / 타입 검사 |
+| `npm run lint` / `npm run typecheck` / `npm test` | 린트 / 타입 검사 / 단위 테스트 |
+| `npm run samples` | 개발용 샘플 풀 받기 (Commons) |
 | `npm run check:secrets` | 스테이징된 파일의 비밀값 검사 (`-- --all` 로 전체) |
 
 ## 환경변수
@@ -49,8 +72,8 @@ npm start
 | `DATA_DIR` | 선택 | 사진·DB 폴더. 기본 `./data` |
 | `FREEPIK_API_KEY` | 풀 생성 / 자동 보충 | Freepik API 키 |
 | `ANTHROPIC_API_KEY` | 풀 생성 / 자동 보충 | 쌍 매칭·품질 검사 |
-| `AUTO_PULL` | 선택 | `on` 이면 온라인일 때 남은 쌍이 적으면 자동 보충 (기본 `off`) |
-| `AUTO_PULL_LOW_WATERMARK` | 선택 | 자동 보충 기준 (아직 안 나간 쌍 수, 기본 200) |
+| `AUTO_PULL` | 선택 | 온라인일 때 남은 쌍이 적으면 자동 보충 (기본 `on`, `off` 로 끔) |
+| `AUTO_PULL_LOW_WATERMARK` | 선택 | 자동 보충 기준 (아직 안 나간 쌍 수, 기본 300) |
 
 ## 디렉터리 구조 (예정)
 
