@@ -67,7 +67,7 @@ function Slot({
       role="button"
       aria-disabled={!!choice}
       onClick={() => !choice && onChoose(side)}
-      className={`relative size-(--sq) overflow-hidden rounded-[1.2vh] bg-white/5 ring-[1vh] ${ring} transition-[box-shadow] duration-150 ${
+      className={`relative size-(--sq) overflow-hidden rounded-[1.2vh] bg-white/5 ring-[1vh] ${ring} ${
         choice ? "cursor-default" : "cursor-pointer"
       }`}
       aria-label={side === "L" ? "왼쪽 사진" : "오른쪽 사진"}
@@ -91,24 +91,24 @@ function Slot({
           </span>
           {chosen && (
             <span
-              className={`absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-[9vh] font-black drop-shadow-[0_0.6vh_1.5vh_rgba(0,0,0,0.7)] ${
+              className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-[2vh] bg-black/65 px-[4vh] py-[1.2vh] text-[9vh] font-black leading-none ${
                 answer.correct ? "text-ok" : "text-bad"
               }`}
             >
               {answer.correct ? "정답!" : "오답"}
             </span>
           )}
-          {credit && <CreditLine credit={credit} />}
+          {credit && <CreditLine credit={credit} isAi={isAi} />}
         </>
       )}
     </div>
   );
 }
 
-function CreditLine({ credit }: { credit: Credit }) {
+function CreditLine({ credit, isAi }: { credit: Credit; isAi: boolean }) {
   return (
     <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-[2vh] pb-[1.4vh] pt-[4vh] text-left text-[1.8vh] text-white/85">
-      {credit.source === "Freepik" ? "Image" : "Photo"} by{" "}
+      {isAi ? "Image" : "Photo"} by{" "}
       <a
         href={credit.link}
         target="_blank"

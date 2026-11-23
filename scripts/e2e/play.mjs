@@ -6,7 +6,7 @@
 // - 라운드 화면이 보일 때 두 이미지가 모두 디코드 완료 상태인지 (동시 표시)
 // - 키보드(←/→)로 5라운드 진행 → 결과 화면
 // - 결과 화면에서 Enter → "준비 중" 없이 곧바로 1라운드 (미리 받기)
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { chromium } from "playwright";
 
@@ -19,6 +19,11 @@ const GAMES = Number(arg("games", "3"));
 const SHOTS = arg("shots", "");
 const WIDTH = Number(arg("width", "1920"));
 const HEIGHT = Number(arg("height", "1080"));
+// --perfect data/pool.json : 풀 파일로 AI 쪽을 알고 전부 맞힌다 (PASS 화면 점검용)
+const PERFECT = arg("perfect", "");
+const aiHashes = PERFECT
+  ? new Set(JSON.parse(readFileSync(PERFECT, "utf8")).pairs.map((p) => p.ai.hash))
+  : null;
 
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 const shot = async (page, name) => {
@@ -69,12 +74,17 @@ for (let g = 0; g < GAMES; g++) {
       console.log(`  첫 라운드까지 ${Date.now() - t0}ms`);
       await shot(page, "02-round");
     }
-    await page.keyboard.press(Math.random() < 0.5 ? "ArrowLeft" : "ArrowRight");
+    let key = Math.random() < 0.5 ? "ArrowLeft" : "ArrowRight";
+    if (aiHashes) {
+      const leftSrc = await page.locator(".opacity-100 img").first().getAttribute("src");
+      key = aiHashes.has(leftSrc.split("/").pop()) ? "ArrowLeft" : "ArrowRight";
+    }
+    await page.keyboard.press(key);
     await page.getByText(/정답!|오답/).waitFor();
     if (g === 0 && r === 0) await shot(page, "03-reveal");
   }
   await page.getByText("다시하기").waitFor({ timeout: 10_000 });
-  const passed = await page.getByText("PASS", { exact: true }).isVisible();
+  const passed = await page.getByText("스태프에게").isVisible();
   console.log(`  game ${g + 1}: ${passed ? "PASS" : "FAIL"} (${Date.now() - t0}ms)`);
   if (g === 0) await shot(page, `04-result-${passed ? "pass" : "fail"}`);
 }
