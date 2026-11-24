@@ -2,7 +2,7 @@
 // 행사 노트북용 "설치 없는 실행 묶음" 만들기. Windows 용과 Mac 용을 함께 만든다.
 // 결과 (out/ 아래):
 //   ai-or-human-win/  + ai-or-human-win.zip   → start.bat 더블클릭
-//   ai-or-human-mac/  + ai-or-human-mac.zip   → 터미널에서 bash start.command
+//   ai-or-human-mac/  + ai-or-human-mac.zip   → 터미널에서 bash start.command (더블클릭은 보안 경고로 막힘)
 // 각 묶음의 내용:
 //   app/        빌드된 서버 (Next.js standalone, node_modules 포함)
 //   app/data/   게임 풀 (images/*.webp, pool.json)
@@ -269,12 +269,13 @@ async function bundleMac() {
       "AI or Human?  (행사용 실행 묶음 · Mac)",
       "",
       "1. zip 을 풀어 폴더를 통째로 행사 맥북에 둡니다.",
-      "2. start.command 를 더블클릭합니다. (처음에는 우클릭 → [열기] → [열기] 를 눌러야 할 수 있습니다.)",
-      "3. 3초 뒤 브라우저가 열립니다.",
-      "",
-      "안 될 때 (permission denied 등): 터미널(Terminal) 앱을 열고,",
-      "bash 라고 치고 한 칸 띄운 뒤 start.command 파일을 터미널 창으로 끌어다 놓고 Enter 를 누릅니다.",
+      "2. 터미널(Terminal) 앱을 엽니다.",
+      "3. bash 라고 치고 한 칸 띄운 뒤, start.command 파일을 터미널 창으로 끌어다 놓고 Enter 를 누릅니다.",
       "   (예:  bash /Users/이름/Downloads/ai-or-human-mac/start.command )",
+      "4. 3초 뒤 브라우저가 열립니다.",
+      "",
+      "더블클릭하면 \"악성 코드가 없음을 확인할 수 없습니다\" 경고가 떠서 열리지 않습니다 (서명되지 않은 파일이라 뜨는 경고).",
+      "위의 bash 방법으로 한 번 실행한 뒤에는 더블클릭으로도 열립니다.",
       "   - '개발자를 확인할 수 없습니다' 경고가 뜨면: 시스템 설정 → 개인정보 보호 및 보안 → [그래도 열기]",
       "   - Apple Silicon(M1 이후)과 Intel 맥 모두 지원합니다 (자동 선택).",
       ...commonReadme,
