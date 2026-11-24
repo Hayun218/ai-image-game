@@ -25,17 +25,25 @@ cp .env.example .env.local   # 값 채우기
 npm run build
 ```
 
-## 행사 노트북에서 설치 없이 실행 (Windows)
+## 행사 노트북에서 설치 없이 실행 (Windows / Mac)
 
-개발 PC 에서 묶음을 한 번 만들어 행사 노트북으로 옮기면, Node·npm·git 설치도 인터넷도 없이 실행됩니다.
+개발 PC(Windows)에서 묶음을 한 번 만들어 행사 노트북으로 옮기면, Node·npm·git 설치도 인터넷도 없이 실행됩니다.
 
 ```bash
-npm run bundle     # out/ai-or-human/ 폴더와 out/ai-or-human.zip (약 300MB) 생성
+npm run bundle           # Windows 용과 Mac 용을 함께 생성
+npm run bundle -- win    # out/ai-or-human-win.zip (약 300MB) 만
+npm run bundle -- mac    # out/ai-or-human-mac.zip (약 350MB) 만
 ```
 
-행사 노트북에서는 zip 을 풀고 `start.bat` 을 더블클릭합니다. 검은 창이 뜨고 3초 뒤 브라우저가
-http://localhost:3000 을 엽니다. 검은 창은 행사 내내 켜 두고, 끝낼 때 닫습니다.
-묶음에는 빌드된 서버, `node.exe`, 게임 풀(`data/images`, `data/pool.json`)이 들어 있습니다.
+| 행사 노트북 | 실행 방법 |
+| --- | --- |
+| Windows | zip 을 풀고 `start.bat` 더블클릭 |
+| Mac | zip 을 풀고, 터미널에서 `bash ` 뒤에 `start.command` 파일을 끌어다 놓고 Enter |
+
+실행 창이 뜨고 3초 뒤 브라우저가 http://localhost:3000 을 엽니다. 실행 창은 행사 내내 켜 두고, 끝낼 때 닫습니다.
+묶음에는 빌드된 서버, Node 실행 파일, 게임 풀(`data/images`, `data/pool.json`)이 들어 있습니다.
+Mac 용에는 Apple Silicon·Intel 용 Node 가 모두 들어 있어 자동으로 골라 씁니다
+(nodejs.org 에서 개발 PC 와 같은 버전을 받아 체크섬을 확인합니다).
 풀이나 코드를 고치면 `npm run bundle` 을 다시 실행해 새 묶음을 만듭니다.
 
 ## 실행
