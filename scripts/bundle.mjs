@@ -26,11 +26,15 @@ if (process.platform !== "win32") {
 }
 
 console.log("1/4 빌드 (standalone)…");
+// next build 가 distDir 에 맞춰 tsconfig.json 을 고쳐 쓰므로, 빌드 뒤에 원래대로 되돌린다
+const tsconfigFile = path.join(ROOT, "tsconfig.json");
+const tsconfig = await readFile(tsconfigFile);
 const build = spawnSync(process.execPath, [path.join(ROOT, "node_modules/next/dist/bin/next"), "build"], {
   cwd: ROOT,
   env: { ...process.env, BUNDLE: "1" },
   stdio: "inherit",
 });
+await writeFile(tsconfigFile, tsconfig);
 if (build.status !== 0) process.exit(build.status ?? 1);
 
 console.log("2/4 앱 복사…");
