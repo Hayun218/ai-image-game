@@ -10,8 +10,10 @@
 - 저장: 로컬 폴더(`data/`)의 이미지 파일 + SQLite(`node:sqlite`, 네이티브 모듈 없음)
 - 사진 출처: 공개 데이터셋(Hugging Face)과 Wikimedia Commons 에서 미리 받아 둔 로컬 풀. 쌍 매칭은 로컬 CLIP (유료 API 없음)
 
-> **public repo 입니다.** 비밀값, 사진, 쌍(pair) 데이터는 절대 커밋하지 않습니다.
-> 사진과 쌍 데이터는 `data/`(gitignore 됨)에만 둡니다. 커밋 전에 `npm run check:secrets` 를 실행하세요.
+> **public repo 입니다.** 비밀값(`.env*`)은 절대 커밋하지 않습니다. 커밋 전에 `npm run check:secrets` 를 실행하세요.
+> 게임이 읽는 풀(`data/images`, `data/pool.json`)은 저장소에 포함되어 있어서, 받아서 설치하면 바로 실행됩니다.
+> `data/pool.json` 에는 정답(어느 쪽이 AI인지)이 들어 있습니다. 풀 작업용 파일(`data/build` 등)은 커밋하지 않습니다.
+> 사진의 출처와 라이선스는 아래 [사진 출처](#사진-출처) 를 보세요.
 
 ## 설치 (행사 노트북)
 
@@ -95,10 +97,29 @@ npm run pool:write
 - 카테고리: 인물(people)·풍경(landscape)·음식(food)·건축(architecture)·동물(animal)·일상(daily), 각 100쌍
 - 걸러내는 기준(`pair.mjs` 위쪽 상수): 사진풍 확률, 카테고리 확률, 짝의 최소 유사도, 흑백 제외, 중복 제외
 - 한 게임 5라운드는 서로 다른 카테고리에서 나옵니다 (풀의 `topic` = 카테고리)
-- 다른 노트북으로 옮길 때는 `data/images` 와 `data/pool.json` 만 복사하면 됩니다 (`data/build` 는 작업용)
-- 데이터셋의 라이선스 표기는 묶음에 대한 것이라, 실제 사진 한 장 한 장의 권리까지 보장하지는 않습니다.
-  엄격히 하려면 실제 사진을 Commons 출처(`commons__*`)로만 제한하세요
+- 만든 풀(`data/images`, `data/pool.json`)은 저장소에 커밋되어 있어 다른 노트북에서는 clone 만 하면 됩니다
+  (`data/build` 는 작업용이라 커밋하지 않음)
 - 샘플 풀로 되돌리기: `npm run samples` (행사용 풀을 처음 쓸 때 기존 풀은 `data/pool.samples.json` 으로 백업됨)
+
+### 사진 출처
+
+풀의 600쌍(1,200장)은 아래 공개 자료에서 받아 1:1 로 자르고 1600px webp 로 변환한 것입니다.
+쌍마다의 출처는 `data/pool.json` 의 `credit` 에 들어 있고, 게임의 정답 공개 화면에도 표시됩니다.
+
+| 구분 | 출처 | 수 | 라이선스 (출처 표기 기준) |
+| --- | --- | --- | --- |
+| AI | [ash12321/flux-1-dev-generated-10k](https://huggingface.co/datasets/ash12321/flux-1-dev-generated-10k) (FLUX.1 dev) | 312 | 데이터셋 카드에 표기 없음 |
+| AI | [Photoroom/midjourney-v6-recap](https://huggingface.co/datasets/Photoroom/midjourney-v6-recap) (Midjourney v6) | 236 | MIT |
+| AI | [julienlucas/midjourney-dalle-sd-nanobananapro-dataset](https://huggingface.co/datasets/julienlucas/midjourney-dalle-sd-nanobananapro-dataset) 의 fake 라벨 | 50 | MIT |
+| AI | [tellif/ai_vs_real_image_semantically_similar](https://huggingface.co/datasets/tellif/ai_vs_real_image_semantically_similar) | 2 | 표기 없음 |
+| 실제 | [Wikimedia Commons](https://commons.wikimedia.org/) Quality images | 316 | 사진별 CC BY / CC BY-SA / 퍼블릭 도메인. 촬영자·라이선스·원본 링크가 `pool.json` 에 있음 |
+| 실제 | julienlucas 데이터셋의 real 라벨 | 284 | MIT (데이터셋 전체에 대한 표기) |
+
+알아둘 점: julienlucas 데이터셋은 실제 사진을 어디서 가져왔는지와 촬영자를 기록하지 않아서,
+이 284장은 데이터셋 이름까지만 표기할 수 있습니다. 데이터셋의 MIT 표기는 묶음에 대한 것이고
+사진 한 장 한 장의 권리를 보장하지는 않습니다. 권리자의 요청이 있으면 해당 사진을 풀에서 뺍니다
+(`data/build/drop.txt` 에 추가 후 `npm run pool:write`). 촬영자가 확인된 사진만 쓰려면 실제 사진을
+Commons 출처(`commons__*`)로 제한하면 됩니다.
 
 ### 개발용 샘플 풀
 
@@ -108,6 +129,9 @@ AI 이미지와 실제 사진 모두 Commons 에 올라온 진짜 파일(퍼블�
 ```bash
 npm run samples
 ```
+
+주의: 이 명령은 `data/pool.json` 을 샘플 15쌍으로 덮어씁니다. 행사용 풀로 되돌리려면
+`git checkout data/pool.json` 을 실행하세요.
 
 Commons 가 요청을 제한하면(429) 서버가 요구하는 시간만큼 기다렸다가 이어서 받습니다.
 
@@ -150,7 +174,8 @@ src/
   instrumentation.ts          (선택) 자동 보충 백그라운드 작업
 config/topics.yaml            주제 이름 + 검색어만
 scripts/build-pool/           사진 풀 생성 배치 (행사 전, 온라인)
-data/                         ← gitignore. images/*.webp, pool.db
+data/images/*.webp, data/pool.json   게임이 읽는 풀 (커밋됨)
+data/build/, data/.cache/            풀 작업용 (gitignore)
 ```
 
 ## 현장 운영 체크리스트
