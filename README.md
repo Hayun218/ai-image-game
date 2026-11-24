@@ -25,6 +25,19 @@ cp .env.example .env.local   # 값 채우기
 npm run build
 ```
 
+## 행사 노트북에서 설치 없이 실행 (Windows)
+
+개발 PC 에서 묶음을 한 번 만들어 행사 노트북으로 옮기면, Node·npm·git 설치도 인터넷도 없이 실행됩니다.
+
+```bash
+npm run bundle     # out/ai-or-human/ 폴더와 out/ai-or-human.zip (약 300MB) 생성
+```
+
+행사 노트북에서는 zip 을 풀고 `start.bat` 을 더블클릭합니다. 검은 창이 뜨고 3초 뒤 브라우저가
+http://localhost:3000 을 엽니다. 검은 창은 행사 내내 켜 두고, 끝낼 때 닫습니다.
+묶음에는 빌드된 서버, `node.exe`, 게임 풀(`data/images`, `data/pool.json`)이 들어 있습니다.
+풀이나 코드를 고치면 `npm run bundle` 을 다시 실행해 새 묶음을 만듭니다.
+
 ## 실행
 
 ```bash

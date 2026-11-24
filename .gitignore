@@ -13,6 +13,7 @@
 
 # next.js / build output
 /.next/
+/.next-bundle/
 /out/
 /build
 
