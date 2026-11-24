@@ -3,6 +3,22 @@
 행사장 모니터 1대(노트북 연결)에서 진행하는 이미지 판별 게임입니다.
 좌우 두 장의 사진 중 **AI가 생성한 사진**을 고르고, 5라운드 중 4개 이상 맞히면 PASS.
 
+## 바로 실행하기 (설치 없음)
+
+행사 노트북에서는 아래 묶음 하나만 받으면 됩니다. Node·npm·git 설치가 필요 없고, 받은 뒤에는 인터넷도 필요 없습니다.
+
+| 노트북 | 받기 | 실행 |
+| --- | --- | --- |
+| Windows | [ai-or-human-win.zip](https://github.com/Hayun218/ai-image-game/releases/latest/download/ai-or-human-win.zip) (약 300MB) | 압축을 풀고 `start.bat` 더블클릭 |
+| Mac | [ai-or-human-mac.zip](https://github.com/Hayun218/ai-image-game/releases/latest/download/ai-or-human-mac.zip) (약 350MB) | 압축을 풀고, 터미널에서 `bash ` 뒤에 `start.command` 를 끌어다 놓고 Enter |
+
+3초 뒤 브라우저가 http://localhost:3000 을 엽니다. `F` 로 전체화면. 실행 창은 행사 내내 켜 두세요.
+처음 실행할 때 보안 경고가 뜨면 Windows 는 [추가 정보] → [실행], Mac 은 시스템 설정 → 개인정보 보호 및 보안 → [그래도 열기].
+
+묶음을 새로 만들어 올리는 방법은 아래 "행사 노트북에서 설치 없이 실행" 을 보세요.
+
+## 개요
+
 - **오프라인 우선**: 게임은 노트북에서 로컬로 실행되고, 인터넷이 없어도 끝까지 플레이할 수 있습니다.
   인터넷은 행사 전에 사진 풀을 만들 때와, (선택) 행사 중 자동 보충에만 씁니다.
 - **즉시 표시**: 사진은 노트북 디스크에서 서빙되고, 게임 시작 전에 5쌍(10장)을 전부 디코드해 둡니다.
@@ -44,7 +60,14 @@ npm run bundle -- mac    # out/ai-or-human-mac.zip (약 350MB) 만
 묶음에는 빌드된 서버, Node 실행 파일, 게임 풀(`data/images`, `data/pool.json`)이 들어 있습니다.
 Mac 용에는 Apple Silicon·Intel 용 Node 가 모두 들어 있어 자동으로 골라 씁니다
 (nodejs.org 에서 개발 PC 와 같은 버전을 받아 체크섬을 확인합니다).
-풀이나 코드를 고치면 `npm run bundle` 을 다시 실행해 새 묶음을 만듭니다.
+풀이나 코드를 고치면 `npm run bundle` 을 다시 실행해 새 묶음을 만들고, GitHub Release 에 올립니다
+(저장소 소유 계정으로 `gh auth login` 이 되어 있어야 함):
+
+```bash
+gh release create v1.0.1 out/ai-or-human-win.zip out/ai-or-human-mac.zip --target main --title "AI or Human? v1.0.1" --notes "변경 내용"
+```
+
+맨 위의 다운로드 링크는 항상 최신 Release 를 가리킵니다.
 
 ## 실행
 
