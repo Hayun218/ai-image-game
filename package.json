@@ -10,6 +10,9 @@
     "typecheck": "tsc --noEmit",
     "check:secrets": "node scripts/check-secrets.mjs",
     "samples": "node scripts/samples/fetch-samples.mjs",
+    "pool:embed": "node scripts/build-pool/embed.mjs",
+    "pool:pair": "node scripts/build-pool/pair.mjs",
+    "pool:write": "node scripts/build-pool/pair.mjs --write",
     "test": "vitest run"
   },
   "dependencies": {
@@ -19,6 +22,7 @@
     "sharp": "^0.35.5"
   },
   "devDependencies": {
+    "@huggingface/transformers": "^4.3.2",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^22.20.5",
     "@types/react": "^19",

@@ -109,16 +109,21 @@ function CreditLine({ credit, isAi }: { credit: Credit; isAi: boolean }) {
   return (
     <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-[2vh] pb-[1.4vh] pt-[4vh] text-left text-[1.8vh] text-white/85">
       {isAi ? "Image" : "Photo"} by{" "}
-      <a
-        href={credit.link}
-        target="_blank"
-        rel="noreferrer"
-        className="underline underline-offset-2"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {credit.name}
-      </a>{" "}
-      on {credit.source}
+      {credit.link ? (
+        <a
+          href={credit.link}
+          target="_blank"
+          rel="noreferrer"
+          className="underline underline-offset-2"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {credit.name}
+        </a>
+      ) : (
+        // 직접 생성한 AI 이미지는 원본 페이지가 없다
+        credit.name
+      )}
+      {credit.source ? ` on ${credit.source}` : ""}
       {credit.license ? ` · ${credit.license}` : ""}
     </span>
   );

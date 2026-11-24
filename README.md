@@ -8,7 +8,7 @@
 - **즉시 표시**: 사진은 노트북 디스크에서 서빙되고, 게임 시작 전에 5쌍(10장)을 전부 디코드해 둡니다.
 - Next.js 16 (App Router) + TypeScript + Tailwind CSS 4
 - 저장: 로컬 폴더(`data/`)의 이미지 파일 + SQLite(`node:sqlite`, 네이티브 모듈 없음)
-- 사진 출처: Freepik API (AI 이미지 / 실제 사진), 쌍 매칭·검사: Anthropic API
+- 사진 출처: 공개 데이터셋(Hugging Face)과 Wikimedia Commons 에서 미리 받아 둔 로컬 풀. 쌍 매칭은 로컬 CLIP (유료 API 없음)
 
 > **public repo 입니다.** 비밀값, 사진, 쌍(pair) 데이터는 절대 커밋하지 않습니다.
 > 사진과 쌍 데이터는 `data/`(gitignore 됨)에만 둡니다. 커밋 전에 `npm run check:secrets` 를 실행하세요.
@@ -63,6 +63,42 @@ npm start
 전체를 다시 섞어서 새 바퀴를 시작합니다. 그래서 승인된 쌍이 5개 이상만 있으면 게임이 멈추지 않습니다.
 바로 직전 게임에 나온 쌍은 뒤로 미뤄서, 연달아 같은 사진이 나오는 일을 줄입니다.
 (바퀴 상태는 서버 메모리에만 있어서 서버를 다시 켜면 새로 섞습니다.)
+
+### 행사용 풀 만들기 (600쌍)
+
+게임은 실행 중에 외부 API 를 부르지 않습니다. 행사 전에 공개 데이터셋에서 이미지를 미리 받아
+이 노트북의 `data/` 에 풀을 만들어 두고, 게임은 그 폴더만 읽습니다. 유료 API 는 쓰지 않습니다.
+
+```
+[수집]  collect.mjs / collect-commons.mjs   Hugging Face 데이터셋, Wikimedia Commons → data/build/cand/
+[임베딩] embed.mjs                           CLIP(로컬 CPU)으로 이미지마다 512차원 벡터 계산
+[짝짓기] pair.mjs                            사진풍만 남김 → 6개 카테고리 분류 → AI ↔ 실제를 비슷한 것끼리 묶음
+[검수]  sheet.mjs / drop.mjs                 시트로 훑어보고 티 나는 이미지를 제외 목록에 추가
+[적용]  pair.mjs --write                     data/images/*.webp + data/pool.json (게임이 읽는 파일)
+```
+
+```bash
+# 1) 후보 수집 (이어받기 가능. 예시)
+node scripts/build-pool/collect.mjs --ds julienlucas/midjourney-dalle-sd-nanobananapro-dataset
+node scripts/build-pool/collect.mjs --ds Photoroom/midjourney-v6-recap --step 30 --max 4000 --only "photograph|photo "
+node scripts/build-pool/collect-commons.mjs          # 실제 사진 보충 (Quality images)
+# 2) 임베딩 → 3) 짝짓기 (data/build/pairs.json)
+npm run pool:embed
+npm run pool:pair
+# 4) 검수: 시트를 보고 뺄 것을 지정한 뒤 다시 짝짓기
+node scripts/build-pool/sheet.mjs --cat food --count 40 --cols 5 --cell 190 --out out/food.png
+node scripts/build-pool/drop.mjs a12 h40 b7           # 12번 쌍의 AI, 40번 쌍의 실제 사진, 7번 쌍 양쪽 제외
+# 5) 게임 풀로 내보내기 → 서버 재시작
+npm run pool:write
+```
+
+- 카테고리: 인물(people)·풍경(landscape)·음식(food)·건축(architecture)·동물(animal)·일상(daily), 각 100쌍
+- 걸러내는 기준(`pair.mjs` 위쪽 상수): 사진풍 확률, 카테고리 확률, 짝의 최소 유사도, 흑백 제외, 중복 제외
+- 한 게임 5라운드는 서로 다른 카테고리에서 나옵니다 (풀의 `topic` = 카테고리)
+- 다른 노트북으로 옮길 때는 `data/images` 와 `data/pool.json` 만 복사하면 됩니다 (`data/build` 는 작업용)
+- 데이터셋의 라이선스 표기는 묶음에 대한 것이라, 실제 사진 한 장 한 장의 권리까지 보장하지는 않습니다.
+  엄격히 하려면 실제 사진을 Commons 출처(`commons__*`)로만 제한하세요
+- 샘플 풀로 되돌리기: `npm run samples` (행사용 풀을 처음 쓸 때 기존 풀은 `data/pool.samples.json` 으로 백업됨)
 
 ### 개발용 샘플 풀
 

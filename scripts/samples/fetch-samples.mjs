@@ -6,7 +6,7 @@
 // 사용: npm run samples
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
@@ -81,10 +81,11 @@ async function original(title, info) {
 }
 
 /** 1:1 크롭 + webp. sharp 는 기본으로 EXIF/XMP/ICC 등 메타데이터를 모두 버린다. */
-async function toWebp(buf) {
+async function toWebp(buf, crop) {
+  // crop: 목록에서 "north" | "south" | "east" | "west" | "centre" 로 지정하면 자동 크롭 대신 그쪽을 남긴다
   const out = await sharp(buf, { limitInputPixels: false })
     .rotate()
-    .resize(SIZE, SIZE, { fit: "cover", position: sharp.strategy.attention })
+    .resize(SIZE, SIZE, { fit: "cover", position: crop || sharp.strategy.attention })
     .toColourspace("srgb")
     .webp({ quality: 82 })
     .toBuffer();
@@ -93,29 +94,62 @@ async function toWebp(buf) {
   return hash;
 }
 
+const arg = (name, def) => {
+  const i = process.argv.indexOf(`--${name}`);
+  return i > -1 ? process.argv[i + 1] : def;
+};
+
+/** --ai-dir 에서 {topic}.png|jpg|jpeg|webp 를 찾는다 (직접 생성한 AI 이미지) */
+async function findLocalAi(dir, topic) {
+  if (!dir || !existsSync(dir)) return null;
+  const hit = (await readdir(dir)).find(
+    (f) => /\.(png|jpe?g|webp)$/i.test(f) && path.parse(f).name.toLowerCase() === topic.toLowerCase(),
+  );
+  return hit ? path.join(dir, hit) : null;
+}
+
 async function main() {
-  const { pairs } = JSON.parse(await readFile(path.join(ROOT, "scripts/samples/samples.json"), "utf8"));
+  // 기본: 개발용 샘플. 행사용은 `npm run pool` (--list data/event/pairs.json --ai-dir data/inbox/ai)
+  const listFile = path.resolve(ROOT, arg("list", "scripts/samples/samples.json"));
+  const aiDir = arg("ai-dir") ? path.resolve(ROOT, arg("ai-dir")) : null;
+  const idPrefix = arg("id-prefix", aiDir ? "event" : "sample");
+  const all = JSON.parse(await readFile(listFile, "utf8")).pairs;
   await mkdir(IMAGES, { recursive: true });
   await mkdir(CACHE, { recursive: true });
 
-  console.log(`샘플 ${pairs.length}쌍 정보 조회…`);
-  const info = await imageInfo(pairs.flatMap((p) => [p.ai, p.human]));
+  // AI 쪽이 Commons 파일(ai)도 아니고 로컬 파일도 없는 쌍은 건너뛴다 (아직 생성 전)
+  const pairs = [];
+  const missing = [];
+  for (const p of all) {
+    const aiFile = p.ai ? null : await findLocalAi(aiDir, p.topic);
+    if (p.ai || aiFile) pairs.push({ ...p, aiFile });
+    else missing.push(p.topic);
+  }
+  if (missing.length) console.log(`AI 이미지가 아직 없는 주제 ${missing.length}개: ${missing.join(", ")}`);
+
+  console.log(`${pairs.length}쌍 정보 조회…`);
+  const info = await imageInfo(pairs.flatMap((p) => (p.ai ? [p.ai, p.human] : [p.human])));
 
   const out = [];
   for (const p of pairs) {
     console.log(`[${p.topic}]`);
-    const ref = async (title) => {
+    const ref = async (title, crop) => {
       const i = info[title];
       return {
-        hash: await toWebp(await original(title, i)),
+        hash: await toWebp(await original(title, i), crop),
         credit: { name: i.artist, link: i.page, source: "Wikimedia Commons", license: i.license || undefined },
       };
     };
+    const localAi = async () => ({
+      hash: await toWebp(await readFile(p.aiFile), p.aiCrop),
+      // aiTool: 생성에 쓴 도구 이름 (예: "ChatGPT"). 원본 페이지가 없으므로 link/source 는 비운다
+      credit: { name: p.aiTool || "AI", link: "", source: "" },
+    });
     out.push({
-      id: `sample-${p.topic}`,
+      id: `${idPrefix}-${p.topic}`,
       topic: p.topic,
-      ai: await ref(p.ai),
-      human: await ref(p.human),
+      ai: p.ai ? await ref(p.ai, p.aiCrop) : await localAi(),
+      human: await ref(p.human, p.crop),
       status: "approved",
       servedCount: 0,
       correctCount: 0,
