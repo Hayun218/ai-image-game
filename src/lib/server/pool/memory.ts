@@ -25,9 +25,18 @@ export class MemoryPool implements PoolStore {
     return new MemoryPool(new Map(json.pairs.map((p) => [p.id, { ...p }])));
   }
 
+  /** 이번 바퀴에 이미 나간 쌍. 다 돌면 비우고 새 바퀴를 시작한다 */
+  private cycle = new Set<string>();
+  private lastDrawAt = 0;
+
   async draw(count: number, opts?: DrawOptions): Promise<Pair[]> {
-    const picked = selectPairs(this.pairs.values(), count, opts);
-    const now = Date.now();
+    const picked = selectPairs(this.pairs.values(), count, { ...opts, servedThisCycle: this.cycle });
+    // 이번 바퀴에 이미 나간 쌍을 다시 꺼냈다면 한 바퀴가 끝난 것 → 그 쌍들부터 새 바퀴
+    const recycled = picked.filter((p) => this.cycle.has(p.id));
+    if (recycled.length > 0) this.cycle = new Set(recycled.map((p) => p.id));
+    else for (const p of picked) this.cycle.add(p.id);
+    // 같은 ms 에 연달아 꺼내도 "직전에 나간 쌍" 구분이 되도록 단조 증가
+    const now = (this.lastDrawAt = Math.max(Date.now(), this.lastDrawAt + 1));
     for (const p of picked) {
       p.servedCount += 1;
       p.lastServedAt = now;

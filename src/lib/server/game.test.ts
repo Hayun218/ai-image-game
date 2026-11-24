@@ -119,7 +119,64 @@ describe("replaceRound", () => {
   });
 });
 
+describe("풀 재사용 (한 바퀴 돌면 다시 섞기)", () => {
+  it("쌍이 적어도 게임이 멈추지 않고, 모든 쌍이 고르게 나간다", async () => {
+    const N = 9;
+    const pool = makePool(N);
+    let prev = new Set<string>();
+    for (let g = 0; g < 36; g++) {
+      const { rounds } = await startGame(pool);
+      const ids = new Set(rounds.map((r) => srcHash(r.left.src).slice(1)));
+      expect(ids.size).toBe(5); // 한 게임 안에서는 중복 없음
+      // 9쌍 중 5쌍씩이면 직전 게임과 최소 1쌍은 겹칠 수밖에 없다. 그 이상은 드물어야 한다
+      expect([...ids].filter((id) => prev.has(id)).length).toBeLessThanOrEqual(2);
+      prev = ids;
+    }
+    const counts = await Promise.all(
+      Array.from({ length: N }, async (_, i) => (await pool.get(`p${i}`))!.servedCount),
+    );
+    expect(counts.reduce((a, b) => a + b)).toBe(36 * 5);
+    expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(2);
+  });
+
+  it("한 바퀴 안에서는 같은 쌍이 다시 나오지 않는다", async () => {
+    const pool = makePool(20);
+    const seen = new Set<string>();
+    for (let g = 0; g < 4; g++) {
+      for (const p of await pool.draw(5)) {
+        expect(seen.has(p.id)).toBe(false);
+        seen.add(p.id);
+      }
+    }
+    expect(seen.size).toBe(20);
+    // 다음 바퀴도 5쌍을 정상적으로 준다
+    expect(await pool.draw(5)).toHaveLength(5);
+  });
+
+  it("새 바퀴의 순서는 매번 같지 않다", async () => {
+    const order = async () => {
+      const pool = makePool(20);
+      for (let g = 0; g < 4; g++) await pool.draw(5); // 첫 바퀴
+      const second: string[] = [];
+      for (let g = 0; g < 4; g++) second.push(...(await pool.draw(5)).map((p) => p.id));
+      return second.join(",");
+    };
+    const orders = new Set(await Promise.all(Array.from({ length: 5 }, order)));
+    expect(orders.size).toBeGreaterThan(1);
+  });
+});
+
 describe("selectPairs", () => {
+  it("이번 바퀴에 안 나간 쌍이 먼저, 직전에 나간 쌍은 맨 뒤", () => {
+    const pairs = [
+      pair("just", "a", { servedCount: 2, lastServedAt: 900 }),
+      pair("done", "b", { servedCount: 2, lastServedAt: 500 }),
+      pair("todo", "c", { servedCount: 1, lastServedAt: 100 }),
+    ];
+    const servedThisCycle = new Set(["just", "done"]);
+    expect(selectPairs(pairs, 3, { servedThisCycle }).map((p) => p.id)).toEqual(["todo", "done", "just"]);
+  });
+
   it("안 나간 쌍 우선, 그다음 가장 오래전에 나간 쌍", () => {
     const pairs = [
       pair("old", "a", { servedCount: 1, lastServedAt: 100 }),
