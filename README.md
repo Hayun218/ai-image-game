@@ -14,13 +14,13 @@
 | 노트북 | 받기 | 실행 |
 | --- | --- | --- |
 | Windows 10/11 (64비트) | [ai-or-human-win.zip](https://github.com/Hayun218/ai-image-game/releases/latest/download/ai-or-human-win.zip) (약 300MB) | 압축을 풀고 `start.bat` 더블클릭 |
-| Mac (Apple Silicon·Intel) | [ai-or-human-mac.zip](https://github.com/Hayun218/ai-image-game/releases/latest/download/ai-or-human-mac.zip) (약 350MB) | 압축을 풀고, 터미널에서 `bash ` 뒤에 `start.command` 를 끌어다 놓고 Enter |
+| Mac (Apple Silicon·Intel) | [ai-or-human-mac.zip](https://github.com/Hayun218/ai-image-game/releases/latest/download/ai-or-human-mac.zip) (약 350MB) | 압축을 풀고 `start.command` 더블클릭 (안 되면 터미널에서 `bash ` 뒤에 `start.command` 를 끌어다 놓고 Enter) |
 
 3초 뒤 브라우저가 http://localhost:3000 을 엽니다. `F` 로 전체화면. 실행 창은 행사 내내 켜 두고, 끝낼 때 닫습니다.
 
 - 처음 실행할 때 보안 경고가 뜨면: Windows 는 [추가 정보] → [실행], Mac 은 시스템 설정 → 개인정보 보호 및 보안 → [그래도 열기]
 - Windows 방화벽 창이 뜨면 [취소] 를 눌러도 됩니다 (이 노트북 안에서만 접속합니다)
-- Mac 은 한 번 실행한 뒤부터 `start.command` 더블클릭으로도 됩니다
+- Mac 에서 "permission denied" 가 나오면 터미널에서 `bash ` 뒤에 `start.command` 를 끌어다 놓고 Enter 로 실행합니다
 
 **지원하지 않는 환경**: ARM 기반 Windows(확인 안 됨), 32비트 Windows, Windows 7·8, Linux, 태블릿·휴대폰.
 회사·학교에서 관리하는 노트북은 보안 정책이 실행을 막을 수 있습니다.

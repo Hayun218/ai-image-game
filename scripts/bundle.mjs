@@ -13,10 +13,11 @@
 //       npm run bundle -- win     (Windows 용만)   /   npm run bundle -- mac   (Mac 용만)
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync } from "node:fs";
-import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { createWriteStream, existsSync } from "node:fs";
+import { cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { crc32, deflateRawSync } from "node:zlib";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = path.join(ROOT, ".next-bundle");
@@ -72,6 +73,86 @@ function zip(name) {
   console.log(`✓ out\\${name}.zip`);
 }
 
+/**
+ * Mac 용 zip: 실행 권한(유닉스 모드)을 넣어서 만든다.
+ * Windows 의 tar/zip 도구는 권한을 기록하지 못해서, 그대로 풀면 Mac 에서 "permission denied" 가 난다.
+ * 그래서 zip 파일을 직접 쓴다 (이미 압축된 webp 는 그대로 저장하고, 나머지는 deflate 로 압축).
+ */
+async function zipUnix(name, isExecutable) {
+  const file = path.join(OUT, `${name}.zip`);
+  await rm(file, { force: true });
+  const out = createWriteStream(file);
+  const write = (buf) => new Promise((res, rej) => out.write(buf, (e) => (e ? rej(e) : res())));
+  const central = [];
+  let offset = 0;
+  const walk = async (rel) => {
+    for (const e of (await readdir(path.join(OUT, rel), { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name))) {
+      const r = `${rel}/${e.name}`;
+      if (e.isDirectory()) {
+        await add(`${r}/`, Buffer.alloc(0), 0o040755);
+        await walk(r);
+      } else {
+        await add(r, await readFile(path.join(OUT, r)), isExecutable(r) ? 0o100755 : 0o100644);
+      }
+    }
+  };
+  const add = async (entry, data, mode) => {
+    const nameBuf = Buffer.from(entry, "utf8");
+    const crc = data.length ? crc32(data) : 0;
+    const rawSize = data.length;
+    let method = 0;
+    if (rawSize > 0 && !entry.endsWith(".webp")) {
+      const packed = deflateRawSync(data, { level: 6 });
+      if (packed.length < rawSize) {
+        data = packed;
+        method = 8;
+      }
+    }
+    const head = Buffer.alloc(30);
+    head.writeUInt32LE(0x04034b50, 0);
+    head.writeUInt16LE(20, 4); // 풀 때 필요한 버전
+    head.writeUInt16LE(0x0800, 6); // 파일 이름은 UTF-8
+    head.writeUInt16LE(method, 8); // 0 = 저장, 8 = deflate
+    head.writeUInt16LE(0, 10); // 시각
+    head.writeUInt16LE(0x5821, 12); // 날짜 (2024-01-01)
+    head.writeUInt32LE(crc, 14);
+    head.writeUInt32LE(data.length, 18);
+    head.writeUInt32LE(rawSize, 22);
+    head.writeUInt16LE(nameBuf.length, 26);
+    const cen = Buffer.alloc(46);
+    cen.writeUInt32LE(0x02014b50, 0);
+    cen.writeUInt16LE((3 << 8) | 20, 4); // 만든 쪽 = 유닉스 → 외부 속성의 권한을 Mac 이 적용한다
+    cen.writeUInt16LE(20, 6);
+    cen.writeUInt16LE(0x0800, 8);
+    cen.writeUInt16LE(method, 10);
+    cen.writeUInt16LE(0, 12);
+    cen.writeUInt16LE(0x5821, 14);
+    cen.writeUInt32LE(crc, 16);
+    cen.writeUInt32LE(data.length, 20);
+    cen.writeUInt32LE(rawSize, 24);
+    cen.writeUInt16LE(nameBuf.length, 28);
+    cen.writeUInt32LE(((mode << 16) | (mode & 0o040000 ? 0x10 : 0)) >>> 0, 38);
+    cen.writeUInt32LE(offset, 42);
+    central.push(cen, nameBuf);
+    await write(head);
+    await write(nameBuf);
+    if (data.length) await write(data);
+    offset += 30 + nameBuf.length + data.length;
+  };
+  await add(`${name}/`, Buffer.alloc(0), 0o040755);
+  await walk(name);
+  const cd = Buffer.concat(central);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(central.length / 2, 8);
+  end.writeUInt16LE(central.length / 2, 10);
+  end.writeUInt32LE(cd.length, 12);
+  end.writeUInt32LE(offset, 16);
+  await write(cd);
+  await write(end);
+  await new Promise((res) => out.end(res));
+  console.log(`✓ out\\${name}.zip (실행 권한 포함)`);
+}
 const commonReadme = [
   "",
   "브라우저에서 F 키로 전체화면, T 키로 다크/라이트를 바꿉니다.",
@@ -160,14 +241,15 @@ async function bundleMac() {
     await mkdir(path.join(dir, "node", arch), { recursive: true });
     await cp(await macNode(arch), path.join(dir, "node", arch, "node"));
   }
-  // zip 은 Windows 에서 만들어 실행 권한이 없으므로, 스크립트가 직접 권한을 주고 격리 속성을 지운다 (줄바꿈은 LF)
+  // zip 에 실행 권한을 넣지만, 다른 도구로 풀어 권한이 빠진 경우에도 되도록 스크립트가 다시 권한을 준다 (줄바꿈은 LF)
   const sh = [
     "#!/bin/bash",
-    "# AI or Human? - Mac 용 실행 스크립트.  터미널에서:  bash start.command",
+    "# AI or Human? - Mac 용 실행 스크립트. 더블클릭하거나, 터미널에서:  bash start.command",
     'DIR="$(cd "$(dirname "$0")" && pwd)"',
     'case "$(uname -m)" in arm64) ARCH=arm64 ;; *) ARCH=x64 ;; esac',
     'NODE="$DIR/node/$ARCH/node"',
     'chmod +x "$NODE" "$DIR/start.command" 2>/dev/null',
+    'if [ ! -x "$NODE" ]; then echo "node 실행 권한을 줄 수 없습니다. 폴더를 홈 폴더(예: 문서)로 옮긴 뒤 다시 실행해 보세요: $NODE"; exit 1; fi',
     'xattr -dr com.apple.quarantine "$DIR" 2>/dev/null',
     'cd "$DIR/app" || exit 1',
     `export PORT=${PORT} HOSTNAME=127.0.0.1 NODE_ENV=production DATA_DIR="$DIR/app/data"`,
@@ -187,16 +269,18 @@ async function bundleMac() {
       "AI or Human?  (행사용 실행 묶음 · Mac)",
       "",
       "1. zip 을 풀어 폴더를 통째로 행사 맥북에 둡니다.",
-      "2. 터미널(Terminal) 앱을 엽니다.",
-      "3. bash 라고 치고 한 칸 띄운 뒤, start.command 파일을 터미널 창으로 끌어다 놓고 Enter 를 누릅니다.",
+      "2. start.command 를 더블클릭합니다. (처음에는 우클릭 → [열기] → [열기] 를 눌러야 할 수 있습니다.)",
+      "3. 3초 뒤 브라우저가 열립니다.",
+      "",
+      "안 될 때 (permission denied 등): 터미널(Terminal) 앱을 열고,",
+      "bash 라고 치고 한 칸 띄운 뒤 start.command 파일을 터미널 창으로 끌어다 놓고 Enter 를 누릅니다.",
       "   (예:  bash /Users/이름/Downloads/ai-or-human-mac/start.command )",
-      "4. 3초 뒤 브라우저가 열립니다. 한 번 실행한 뒤에는 start.command 를 더블클릭해도 됩니다.",
       "   - '개발자를 확인할 수 없습니다' 경고가 뜨면: 시스템 설정 → 개인정보 보호 및 보안 → [그래도 열기]",
       "   - Apple Silicon(M1 이후)과 Intel 맥 모두 지원합니다 (자동 선택).",
       ...commonReadme,
     ].join("\n"),
   );
-  zip(name);
+  await zipUnix(name, (r) => r.endsWith("/start.command") || /\/node\/(arm64|x64)\/node$/.test(r));
 }
 
 await mkdir(OUT, { recursive: true });
