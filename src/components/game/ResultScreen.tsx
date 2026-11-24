@@ -53,16 +53,16 @@ export function ResultScreen({ finish, onRestart, onIdle }: Props) {
   }, [locked, onRestart]);
 
   return (
-    <div className="relative flex h-full w-full flex-col items-center justify-center gap-[3vh] text-center">
+    <div className="relative flex h-full w-full flex-col items-center justify-center gap-[calc(var(--u)*3)] text-center">
       {finish.passed ? <Pass finish={finish} /> : <Fail finish={finish} />}
       <button
         type="button"
         onClick={() => !locked && onRestart()}
-        className={`mt-[2vh] rounded-full px-[6vh] py-[2.2vh] text-[4vh] font-black transition active:scale-95 ${
+        className={`mt-[calc(var(--u)*2)] rounded-full px-[calc(var(--u)*6)] py-[calc(var(--u)*2.2)] text-[length:calc(var(--u)*4)] font-black transition active:scale-95 ${
           locked ? "bg-foreground/15 text-foreground/50" : "bg-foreground text-background hover:brightness-90"
         }`}
       >
-        다시하기 <span className="text-[2.6vh] font-bold opacity-70">Enter</span>
+        다시하기 <span className="text-[length:calc(var(--u)*2.6)] font-bold opacity-70">Enter</span>
       </button>
     </div>
   );
@@ -72,14 +72,14 @@ function Pass({ finish }: { finish: FinishResponse }) {
   return (
     <>
       <Confetti />
-      <p className="text-[4vh] font-bold text-foreground/85">
+      <p className="text-[length:calc(var(--u)*4)] font-bold text-foreground/85">
         {finish.total}문제 중 {finish.score}개 정답!
       </p>
-      <h2 className="animate-pass bg-gradient-to-b from-foreground to-accent bg-clip-text text-[26vh] font-black leading-none tracking-tighter text-transparent drop-shadow-[0_0_5vh_rgba(228,0,127,0.55)]">
+      <h2 className="animate-pass bg-gradient-to-b from-foreground to-accent bg-clip-text text-[length:calc(var(--u)*26)] font-black leading-none tracking-tighter text-transparent drop-shadow-[0_0_calc(var(--u)*5)_rgba(228,0,127,0.55)]">
         PASS
       </h2>
-      <p className="text-[3.4vh] font-bold">스태프에게 이 화면을 보여 주세요 🎁</p>
-      <p className="rounded-[1vh] border-[0.3vh] border-foreground/40 px-[3vh] py-[1vh] font-mono text-[4.4vh] font-bold tracking-[0.3em]">
+      <p className="text-[length:calc(var(--u)*3.4)] font-bold">스태프에게 이 화면을 보여 주세요 🎁</p>
+      <p className="rounded-[calc(var(--u)*1)] border-[length:calc(var(--u)*0.3)] border-foreground/40 px-[calc(var(--u)*3)] py-[calc(var(--u)*1)] font-mono text-[length:calc(var(--u)*4.4)] font-bold tracking-[0.3em]">
         #{finish.code}
       </p>
     </>
@@ -89,12 +89,12 @@ function Pass({ finish }: { finish: FinishResponse }) {
 function Fail({ finish }: { finish: FinishResponse }) {
   return (
     <>
-      <p className="text-[4vh] font-bold text-foreground/70">아쉬워요!</p>
-      <h2 className="text-[20vh] font-black leading-none tabular-nums">
+      <p className="text-[length:calc(var(--u)*4)] font-bold text-foreground/70">아쉬워요!</p>
+      <h2 className="text-[length:calc(var(--u)*20)] font-black leading-none tabular-nums">
         {finish.score}
-        <span className="text-[10vh] text-foreground/50"> / {finish.total}</span>
+        <span className="text-[length:calc(var(--u)*10)] text-foreground/50"> / {finish.total}</span>
       </h2>
-      <p className="text-[3.6vh] font-bold">
+      <p className="text-[length:calc(var(--u)*3.6)] font-bold">
         {GAME.passScore}개 이상 맞히면 <span className="text-accent">PASS</span> — 다시 도전해 보세요
       </p>
     </>
@@ -120,11 +120,11 @@ function Confetti() {
       {pieces.map((p, i) => (
         <span
           key={i}
-          className="animate-confetti absolute top-[-5vh] block"
+          className="animate-confetti absolute top-[calc(var(--u)*-5)] block"
           style={{
             left: `${p.left}%`,
-            width: `${p.size}vh`,
-            height: `${p.size * 1.8}vh`,
+            width: `calc(var(--u) * ${p.size})`,
+            height: `calc(var(--u) * ${p.size * 1.8})`,
             background: p.color,
             rotate: `${p.rotate}deg`,
             animationDelay: `${p.delay}s`,

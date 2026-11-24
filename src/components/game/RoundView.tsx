@@ -30,7 +30,7 @@ export function RoundView({ round, choice, answer, onChoose }: Props) {
 
   return (
     <div
-      className={`flex items-center justify-center gap-[2vw] transition-opacity duration-300 ease-out ${
+      className={`flex items-center justify-center gap-[2vw] portrait:flex-col portrait:gap-[calc(var(--u)*5)] transition-opacity duration-300 ease-out ${
         visible ? "opacity-100" : "opacity-0"
       }`}
     >
@@ -67,7 +67,7 @@ function Slot({
       role="button"
       aria-disabled={!!choice}
       onClick={() => !choice && onChoose(side)}
-      className={`relative size-(--sq) overflow-hidden rounded-[1.2vh] bg-foreground/5 ring-[1vh] ${ring} ${
+      className={`relative size-(--sq) overflow-hidden rounded-[calc(var(--u)*1.2)] bg-foreground/5 ring-[length:calc(var(--u)*1)] ${ring} ${
         choice ? "cursor-default" : "cursor-pointer"
       }`}
       aria-label={side === "L" ? "왼쪽 사진" : "오른쪽 사진"}
@@ -75,15 +75,16 @@ function Slot({
       <div ref={slotRef} className="h-full w-full" />
 
       {!choice && (
-        <span className="pointer-events-none absolute bottom-[2vh] left-1/2 -translate-x-1/2 rounded-full bg-black/45 px-[2vh] py-[0.6vh] text-[2.6vh] font-bold text-white/85">
-          {side === "L" ? "← 왼쪽" : "오른쪽 →"}
+        <span className="pointer-events-none absolute bottom-[calc(var(--u)*2)] left-1/2 -translate-x-1/2 rounded-full bg-black/45 px-[calc(var(--u)*2)] py-[calc(var(--u)*0.6)] text-[length:calc(var(--u)*2.6)] font-bold text-white/85">
+          <span className="portrait:hidden">{side === "L" ? "← 왼쪽" : "오른쪽 →"}</span>
+          <span className="hidden portrait:inline">{side === "L" ? "↑ 위" : "아래 ↓"}</span>
         </span>
       )}
 
       {answer && (
         <>
           <span
-            className={`absolute left-1/2 top-[2.5vh] -translate-x-1/2 rounded-full px-[2.6vh] py-[0.8vh] text-[4.2vh] font-black shadow-lg ${
+            className={`absolute left-1/2 top-[calc(var(--u)*2.5)] -translate-x-1/2 rounded-full px-[calc(var(--u)*2.6)] py-[calc(var(--u)*0.8)] text-[length:calc(var(--u)*4.2)] font-black shadow-lg ${
               isAi ? "bg-accent text-white" : "bg-white text-black"
             }`}
           >
@@ -91,7 +92,7 @@ function Slot({
           </span>
           {chosen && (
             <span
-              className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-[2vh] bg-black/65 px-[4vh] py-[1.2vh] text-[9vh] font-black leading-none ${
+              className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-[calc(var(--u)*2)] bg-black/65 px-[calc(var(--u)*4)] py-[calc(var(--u)*1.2)] text-[length:calc(var(--u)*9)] font-black leading-none ${
                 answer.correct ? "text-ok" : "text-bad"
               }`}
             >
@@ -107,7 +108,7 @@ function Slot({
 
 function CreditLine({ credit, isAi }: { credit: Credit; isAi: boolean }) {
   return (
-    <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-[2vh] pb-[1.4vh] pt-[4vh] text-left text-[1.8vh] text-white/85">
+    <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-[calc(var(--u)*2)] pb-[calc(var(--u)*1.4)] pt-[calc(var(--u)*4)] text-left text-[length:calc(var(--u)*1.8)] text-white/85">
       {isAi ? "Image" : "Photo"} by{" "}
       {credit.link ? (
         <a

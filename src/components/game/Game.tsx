@@ -17,8 +17,9 @@ type Phase =
   | { name: "result"; finish: FinishResponse }
   | { name: "error"; message: string };
 
-const LEFT_KEYS = new Set(["ArrowLeft", "PageUp"]);
-const RIGHT_KEYS = new Set(["ArrowRight", "PageDown"]);
+// 세로 모니터에서는 두 장이 위아래로 쌓이므로 ↑ = 왼쪽(위), ↓ = 오른쪽(아래)
+const LEFT_KEYS = new Set(["ArrowLeft", "PageUp", "ArrowUp"]);
+const RIGHT_KEYS = new Set(["ArrowRight", "PageDown", "ArrowDown"]);
 const GO_KEYS = new Set(["Enter", " ", "PageDown", "ArrowRight"]);
 
 export function Game() {
@@ -171,19 +172,19 @@ export function Game() {
 
 function Loading() {
   return (
-    <div className="flex flex-col items-center gap-[3vh]">
-      <div className="h-[8vh] w-[8vh] animate-spin rounded-full border-[0.8vh] border-foreground/15 border-t-accent" />
-      <p className="text-[4vh] font-bold text-foreground/80">준비 중…</p>
+    <div className="flex flex-col items-center gap-[calc(var(--u)*3)]">
+      <div className="h-[calc(var(--u)*8)] w-[calc(var(--u)*8)] animate-spin rounded-full border-[length:calc(var(--u)*0.8)] border-foreground/15 border-t-accent" />
+      <p className="text-[length:calc(var(--u)*4)] font-bold text-foreground/80">준비 중…</p>
     </div>
   );
 }
 
 function ErrorView({ message }: { message: string }) {
   return (
-    <div className="flex max-w-[70vw] flex-col items-center gap-[2vh] text-center">
-      <p className="text-[4.5vh] font-bold">잠시 문제가 생겼어요</p>
-      <p className="text-[2.4vh] text-foreground/60">{message}</p>
-      <p className="text-[2.4vh] text-foreground/60">Enter 를 누르면 다시 시도합니다 · 10초 뒤 처음 화면으로</p>
+    <div className="flex max-w-[70vw] flex-col items-center gap-[calc(var(--u)*2)] text-center">
+      <p className="text-[length:calc(var(--u)*4.5)] font-bold">잠시 문제가 생겼어요</p>
+      <p className="text-[length:calc(var(--u)*2.4)] text-foreground/60">{message}</p>
+      <p className="text-[length:calc(var(--u)*2.4)] text-foreground/60">Enter 를 누르면 다시 시도합니다 · 10초 뒤 처음 화면으로</p>
     </div>
   );
 }
