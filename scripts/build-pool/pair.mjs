@@ -46,6 +46,20 @@ const STYLES = [
 const MIN_PHOTO = 0.45;
 const MIN_CATEGORY = 0.6; // 카테고리 확률이 이보다 낮으면 애매한 이미지로 보고 버린다
 const MIN_SIM = 0.66; // 짝의 최소 유사도
+/**
+ * "잘 찍은 정도" 균형. AI 이미지는 화보처럼 매끈한 것이 많아서, 그대로 짝지으면 "더 예쁜 쪽 = AI" 로 맞힐 수 있다.
+ * CLIP 으로 각 이미지의 화보 같은 정도(0~1)를 재고, 실제 사진이 AI 만큼 또는 그보다 잘 찍힌 쌍을 우선한다.
+ * (실제 사진이 항상 더 예쁘면 그것도 힌트가 되므로, AI 가 조금 더 화보 같은 쌍도 일부 남긴다.)
+ */
+const POLISH = [
+  "a stunning professional photograph, award-winning, beautiful lighting",
+  "an ordinary amateur snapshot, plain documentary photo",
+];
+const MAX_AI_LEAD = 0.15; // AI 가 실제 사진보다 화보 같을 수 있는 한도
+const MAX_REAL_LEAD = 0.25; // 실제 사진이 AI 보다 화보 같을 수 있는 한도
+const RELAX_STEP = 0.2; // 100쌍이 안 차는 카테고리에서만 한도를 이만큼 넓힌다
+const GAP_WEIGHT = 0.3; // AI 가 앞설수록 짝 점수를 깎는다
+const REAL_POLISH_BONUS = 0.08; // 실제 사진이 잘 찍힌 쌍을 우선한다
 const MAX_DUP = 0.93; // 같은 쪽에서 이보다 비슷한 이미지는 중복으로 본다 (같은 프롬프트의 변형 등)
 
 const softmax = (scores, t = 100) => {
@@ -119,7 +133,7 @@ async function loadItems() {
         file: path.join(dir, `${row}.jpg`),
         kind,
         generator,
-        commons: name.startsWith("commons__") ? { artist: m.artist, license: m.license, link: m.link } : null,
+        commons: /^commons(fp)?__/.test(name) ? { artist: m.artist, license: m.license, link: m.link } : null,
         w: m.w,
         h: m.h,
         emb: all.subarray(i * DIM, (i + 1) * DIM),
@@ -158,6 +172,7 @@ async function main() {
   const cats = Object.keys(CATEGORIES);
   const catT = [];
   for (const c of cats) catT.push(mean(await embedTexts(CATEGORIES[c])));
+  const polishT = await embedTexts(POLISH);
 
   // 1) 사진풍만 남기고 카테고리 분류
   const byCat = Object.fromEntries(cats.map((c) => [c, { ai: [], human: [] }]));
@@ -182,6 +197,7 @@ async function main() {
       mono++;
       continue;
     }
+    it.pro = softmax(polishT.map((t) => dot(it.emb, t)))[0];
     it.cat = cats[best];
     byCat[it.cat][it.kind].push(it);
   }
@@ -191,34 +207,44 @@ async function main() {
   const pairs = [];
   for (const c of cats) {
     const { ai, human } = byCat[c];
-    const cand = [];
-    for (let a = 0; a < ai.length; a++) {
-      for (let h = 0; h < human.length; h++) {
-        const s = dot(ai[a].emb, human[h].emb);
-        if (s >= MIN_SIM) cand.push([s, a, h]);
-      }
-    }
-    cand.sort((x, y) => y[0] - x[0]);
     const usedA = new Set();
     const usedH = new Set();
     const picked = [];
-    for (const [s, a, h] of cand) {
+    // 1차: 품질 차이 한도 안에서 고른다. 2·3차: 그래도 모자란 카테고리만 한도를 넓혀서 채운다
+    for (const relax of [0, RELAX_STEP, RELAX_STEP * 2.5]) {
       if (picked.length >= PER) break;
-      if (usedA.has(a) || usedH.has(h)) continue;
-      const dupA = picked.some((p) => dot(p.ai.emb, ai[a].emb) > MAX_DUP);
-      const dupH = picked.some((p) => dot(p.human.emb, human[h].emb) > MAX_DUP);
-      if (dupA) usedA.add(a);
-      if (dupH) usedH.add(h);
-      if (dupA || dupH) continue;
-      usedA.add(a);
-      usedH.add(h);
-      picked.push({ cat: c, sim: s, ai: ai[a], human: human[h] });
+      const cand = [];
+      for (let a = 0; a < ai.length; a++) {
+        if (usedA.has(a)) continue;
+        for (let h = 0; h < human.length; h++) {
+          if (usedH.has(h)) continue;
+          const s = dot(ai[a].emb, human[h].emb);
+          const lead = ai[a].pro - human[h].pro; // 양수면 AI 가 더 화보 같다
+          if (s < MIN_SIM || lead > MAX_AI_LEAD + relax || -lead > MAX_REAL_LEAD + relax) continue;
+          cand.push([s - GAP_WEIGHT * Math.max(0, lead) + REAL_POLISH_BONUS * human[h].pro, a, h, s]);
+        }
+      }
+      cand.sort((x, y) => y[0] - x[0]);
+      for (const [, a, h, s] of cand) {
+        if (picked.length >= PER) break;
+        if (usedA.has(a) || usedH.has(h)) continue;
+        const dupA = picked.some((p) => dot(p.ai.emb, ai[a].emb) > MAX_DUP);
+        const dupH = picked.some((p) => dot(p.human.emb, human[h].emb) > MAX_DUP);
+        if (dupA) usedA.add(a);
+        if (dupH) usedH.add(h);
+        if (dupA || dupH) continue;
+        usedA.add(a);
+        usedH.add(h);
+        picked.push({ cat: c, sim: s, ai: ai[a], human: human[h] });
+      }
     }
-    console.log(`${c.padEnd(13)} AI ${String(ai.length).padStart(5)}  실제 ${String(human.length).padStart(5)}  → ${picked.length}쌍 (유사도 ${picked.length ? picked.at(-1).sim.toFixed(2) + "~" + picked[0].sim.toFixed(2) : "-"})`);
+    const sims = picked.map((p) => p.sim).sort((x, y) => x - y);
+    const aiPrettier = picked.filter((p) => p.ai.pro > p.human.pro).length;
+    console.log(`${c.padEnd(13)} AI ${String(ai.length).padStart(5)}  실제 ${String(human.length).padStart(5)}  → ${picked.length}쌍 (유사도 ${picked.length ? sims[0].toFixed(2) + "~" + sims.at(-1).toFixed(2) : "-"}, AI 가 더 화보 같은 쌍 ${aiPrettier})`);
     pairs.push(...picked);
   }
 
-  const slim = (it) => ({ id: it.id, file: it.file, ds: it.ds, generator: it.generator, photo: +it.photo.toFixed(2) });
+  const slim = (it) => ({ id: it.id, file: it.file, ds: it.ds, generator: it.generator, photo: +it.photo.toFixed(2), pro: +it.pro.toFixed(2) });
   await writeFile(
     path.join(DATA, "build", "pairs.json"),
     JSON.stringify(pairs.map((p) => ({ cat: p.cat, sim: +p.sim.toFixed(3), ai: slim(p.ai), human: slim(p.human) })), null, 1),

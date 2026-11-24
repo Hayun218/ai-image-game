@@ -117,8 +117,11 @@ gh release create v1.0.1 out/ai-or-human-win.zip out/ai-or-human-mac.zip --targe
 - 흑백·세피아, 과한 채도처럼 한쪽만 튀는 색감은 제외 (두 장의 톤이 비슷해야 함)
 - 글자, 로고, 워터마크가 보이는 사진은 제외 (AI 글자 뭉개짐이 정답 힌트가 됨)
 - 쌍은 같은 카테고리에서 주제·구도가 비슷한 것끼리 맞춘다
+- **"더 예쁜 쪽 = AI" 가 통하지 않게 한다.** AI 이미지는 화보처럼 매끈한 것이 많아서, 실제 사진도 그만큼 또는 그보다
+  잘 찍힌 것과 짝짓는다. 실제 사진이 항상 더 예쁘면 그것도 힌트가 되므로 AI 가 조금 더 화보 같은 쌍도 일부 섞는다
+  (현재 풀: AI 가 더 화보 같은 쌍이 카테고리별 21~41%)
 
-현재 풀은 190px 크기의 시트로 검수했기 때문에, 작은 워터마크나 작은 글자가 남아 있을 수 있습니다.
+현재 풀은 AI 이미지를 238px 크기의 시트로 전수 검수했습니다. 그보다 작은 워터마크나 글자는 남아 있을 수 있습니다.
 발견하면 아래 "검수" 방법으로 빼고 다시 내보냅니다.
 
 ### 풀 만들기 (600쌍)
@@ -139,6 +142,7 @@ gh release create v1.0.1 out/ai-or-human-win.zip out/ai-or-human-mac.zip --targe
 node scripts/build-pool/collect.mjs --ds julienlucas/midjourney-dalle-sd-nanobananapro-dataset
 node scripts/build-pool/collect.mjs --ds Photoroom/midjourney-v6-recap --step 30 --max 4000 --only "photograph|photo "
 node scripts/build-pool/collect-commons.mjs          # 실제 사진 보충 (Quality images)
+node scripts/build-pool/collect-commons.mjs --fp     # 잘 찍은 실제 사진 (Featured pictures, 선정작)
 # 2) 임베딩 → 3) 짝짓기 (data/build/pairs.json)
 npm run pool:embed
 npm run pool:pair
@@ -150,7 +154,8 @@ npm run pool:write
 ```
 
 - 카테고리: 인물(people)·풍경(landscape)·음식(food)·건축(architecture)·동물(animal)·일상(daily), 각 100쌍
-- 걸러내는 기준(`pair.mjs` 위쪽 상수): 사진풍 확률, 카테고리 확률, 짝의 최소 유사도, 흑백 제외, 중복 제외
+- 걸러내는 기준(`pair.mjs` 위쪽 상수): 사진풍 확률, 카테고리 확률, 짝의 최소 유사도, 흑백 제외, 중복 제외,
+  두 장의 "화보 같은 정도" 차이 한도
 - 후보 원본(`data/build/cand`, 약 18,000장)과 제외 목록(`data/build/drop.txt`)은 작업한 PC 에만 있고 저장소에는 없습니다.
   다른 PC 에서 풀을 다시 만들려면 1) 수집부터 해야 합니다
 - Commons 는 요청 제한(429)이 잦아 수집이 느립니다. 서버가 요구하는 시간만큼 기다렸다가 이어서 받습니다
@@ -162,15 +167,15 @@ npm run pool:write
 
 | 구분 | 출처 | 수 | 라이선스 (출처 표기 기준) |
 | --- | --- | --- | --- |
-| AI | [ash12321/flux-1-dev-generated-10k](https://huggingface.co/datasets/ash12321/flux-1-dev-generated-10k) (FLUX.1 dev) | 312 | 데이터셋 카드에 표기 없음 |
-| AI | [Photoroom/midjourney-v6-recap](https://huggingface.co/datasets/Photoroom/midjourney-v6-recap) (Midjourney v6) | 236 | MIT |
-| AI | [julienlucas/midjourney-dalle-sd-nanobananapro-dataset](https://huggingface.co/datasets/julienlucas/midjourney-dalle-sd-nanobananapro-dataset) 의 fake 라벨 | 50 | MIT |
-| AI | [tellif/ai_vs_real_image_semantically_similar](https://huggingface.co/datasets/tellif/ai_vs_real_image_semantically_similar) | 2 | 표기 없음 |
-| 실제 | [Wikimedia Commons](https://commons.wikimedia.org/) Quality images | 316 | 사진별 CC BY / CC BY-SA / 퍼블릭 도메인. 촬영자·라이선스·원본 링크가 `pool.json` 에 있음 |
-| 실제 | julienlucas 데이터셋의 real 라벨 | 284 | MIT (데이터셋 전체에 대한 표기) |
+| AI | [ash12321/flux-1-dev-generated-10k](https://huggingface.co/datasets/ash12321/flux-1-dev-generated-10k) (FLUX.1 dev) | 299 | 데이터셋 카드에 표기 없음 |
+| AI | [Photoroom/midjourney-v6-recap](https://huggingface.co/datasets/Photoroom/midjourney-v6-recap) (Midjourney v6) | 238 | MIT |
+| AI | [julienlucas/midjourney-dalle-sd-nanobananapro-dataset](https://huggingface.co/datasets/julienlucas/midjourney-dalle-sd-nanobananapro-dataset) 의 fake 라벨 | 59 | MIT |
+| AI | [tellif/ai_vs_real_image_semantically_similar](https://huggingface.co/datasets/tellif/ai_vs_real_image_semantically_similar) | 4 | 표기 없음 |
+| 실제 | [Wikimedia Commons](https://commons.wikimedia.org/) Featured pictures 188장, Quality images 163장 | 351 | 사진별 CC BY / CC BY-SA / 퍼블릭 도메인. 촬영자·라이선스·원본 링크가 `pool.json` 에 있음 |
+| 실제 | julienlucas 데이터셋의 real 라벨 | 249 | MIT (데이터셋 전체에 대한 표기) |
 
 알아둘 점: julienlucas 데이터셋은 실제 사진을 어디서 가져왔는지와 촬영자를 기록하지 않아서,
-이 284장은 데이터셋 이름까지만 표기할 수 있습니다. 데이터셋의 MIT 표기는 묶음에 대한 것이고
+이 249장은 데이터셋 이름까지만 표기할 수 있습니다. 데이터셋의 MIT 표기는 묶음에 대한 것이고
 사진 한 장 한 장의 권리를 보장하지는 않습니다. 권리자의 요청이 있으면 해당 사진을 풀에서 뺍니다.
 촬영자가 확인된 사진만 쓰려면 실제 사진을 Commons 출처(`commons__*`)로 제한하면 됩니다.
 

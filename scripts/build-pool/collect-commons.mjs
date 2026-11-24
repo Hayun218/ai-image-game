@@ -13,11 +13,15 @@ import sharp from "sharp";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const DATA = path.resolve(process.env.DATA_DIR || path.join(ROOT, "data"));
 const UA = { "User-Agent": "image-quiz-sample-fetch/0.1 (dev samples; low volume)" };
-const QI = 'incategory:"Quality images"';
+// --fp: Quality images 대신 Featured pictures(선정작, 훨씬 잘 찍은 사진)에서 받는다
+const FP = process.argv.includes("--fp");
+const QI = FP ? 'incategory:"Featured pictures on Wikimedia Commons"' : 'incategory:"Quality images"';
+const PREFIX = FP ? "commonsfp" : "commons";
 const PER_QUERY = 50;
 const MIN_SIDE = 800;
 
 const QUERIES = {
+  people: ["portrait woman", "portrait man", "child", "people street", "musician", "farmer", "dancer", "fisherman", "craftsman", "monk"],
   landscape: ["mountain landscape", "lake reflection", "sea coast cliffs", "forest trees", "river valley", "desert dunes", "waterfall", "meadow field sunset"],
   food: ["food dish plate", "cake dessert", "bread bakery", "fruit", "vegetables", "soup", "pasta", "coffee cup", "breakfast", "cheese"],
   architecture: ["church exterior", "castle", "bridge", "modern building facade", "skyscraper", "old town street houses", "house exterior", "tower"],
@@ -48,10 +52,10 @@ async function get(url) {
 }
 const stripHtml = (s = "") => s.replace(/<[^>]*>/g, "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, " ").trim();
 
-const want = process.argv.slice(2);
+const want = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 for (const [cat, queries] of Object.entries(QUERIES)) {
   if (want.length && !want.includes(cat)) continue;
-  const dir = path.join(DATA, "build", "cand", `commons__${cat}`);
+  const dir = path.join(DATA, "build", "cand", `${PREFIX}__${cat}`);
   const metaFile = path.join(dir, "meta.jsonl");
   await mkdir(dir, { recursive: true });
   const done = new Set();
